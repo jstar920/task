@@ -12,7 +12,9 @@ include_directories (.)
 add_library(task SHARED ${TASK_HEADERS} ${TASK_SOURCES})
 add_library(task_static STATIC ${TASK_HEADERS} ${TASK_SOURCES})
 
-set_property(TARGET task PROPERTY FOLDER "libraries")
+#set_property(TARGET task PROPERTY FOLDER "libraries")
+set_target_properties(task PROPERTIES FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(task_static PROPERTIES FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 
 #set_target_properties(task PROPERTIES RUNTIME_OUTPUT_DIRECTORY %{PROJECT_BINARY_DIR}/bin)
 
