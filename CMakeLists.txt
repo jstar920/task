@@ -12,4 +12,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+if("${PRJECT_LIBRARIES_DIR}" STREQUAL "")
+    set(PRJECT_LIBRARIES_DIR "libraries")
+endif()
+
 add_subdirectory(src)
+add_subdirectory(tests)
