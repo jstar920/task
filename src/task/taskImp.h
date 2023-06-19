@@ -7,15 +7,17 @@
 namespace task
 {
     using TaskPtr = std::unique_ptr<struct Task>;
-    class TaskManager
+    class TaskQueue
     {
     public:
         void addTask(TaskPtr t);
         void run();
         void stop();
     private:
+        bool queueEmpty() const;
+    private:
         std::list<TaskPtr> tasks_;
-        std::mutex mutex_;
+        mutable std::mutex mutex_;
         std::atomic_bool stop_ {true};
         std::condition_variable cv_;
     };
