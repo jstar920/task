@@ -7,7 +7,7 @@
 namespace task
 {
     using TaskPtr = std::unique_ptr<struct Task>;
-    class TaskQueue
+    class TaskListQueue
     {
     public:
         void addTask(TaskPtr t);

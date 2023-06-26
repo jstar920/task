@@ -1,17 +1,17 @@
-#include "taskImp.h"
+#include "taskListQueue.h"
 #include "task.h"
 
 #include <chrono>
 
 namespace task
 {
-   void TaskQueue::addTask(TaskPtr t)
+   void TaskListQueue::addTask(TaskPtr t)
    {
        std::lock_guard<std::mutex> guard(mutex_);
        tasks_.emplace_back(std::move(t));
    }
 
-   void TaskQueue::run()
+   void TaskListQueue::run()
    {
        while (!stop_)
        {
@@ -31,12 +31,12 @@ namespace task
        }
    }
 
-   void TaskQueue::stop()
+   void TaskListQueue::stop()
    {
        stop_ = true;
    }
 
-   bool TaskQueue::queueEmpty() const
+   bool TaskListQueue::queueEmpty() const
    {
        std::lock_guard<std::mutex> guard(mutex_);
        return tasks_.empty();
