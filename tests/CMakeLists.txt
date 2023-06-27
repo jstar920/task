@@ -11,8 +11,7 @@ include_directories (.)
 
 #add_library(tests SHARED ${TESTS_HEADERS} ${TESTS_SOURCES})
 add_executable(task_tests ${TESTS_HEADERS} ${TESTS_SOURCES})
-target_link_libraries(task_tests PRIVATE task_static)
-target_include_directories(task_tests PRIVATE ${CMAKE_SRC_ROOT_DIRECTORY}/task)
+target_link_libraries(task_tests PUBLIC task_static PUBLIC assure_static)
 
 set_property(TARGET task_tests PROPERTY FOLDER ${PRJECT_LIBRARIES_DIR}/test)
 

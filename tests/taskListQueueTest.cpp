@@ -10,10 +10,10 @@ TEST_CASE("signgle_thread", "TaskListQueueTest")
     const auto TestFunc = [&count](){
         ++count;
     };
-    queue.addTask(std::make_unique<Task>(TestFunc));
-    queue.addTask(std::make_unique<Task>(TestFunc));
-    queue.addTask(std::make_unique<Task>(TestFunc));
-    queue.addTask(std::make_unique<Task>(TestFunc));
+    queue.addTask(std::move(generateTask(TestFunc)));
+//    queue.addTask(std::make_unique<Task>(TestFunc));
+//    queue.addTask(std::make_unique<Task>(TestFunc));
+//    queue.addTask(std::make_unique<Task>(TestFunc));
 
     queue.run();
     queue.stop();
