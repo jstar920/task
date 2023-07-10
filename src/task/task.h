@@ -22,36 +22,37 @@ namespace task
     std::unique_ptr<Task> generateTask(const std::function<R(const Arg&...)>& f, const Arg&... arg)
     {
         if (f) {
-            func = [f, arg...]() {
+            auto func = [f, arg...]() {
                 f(arg...);
             };
             return std::make_unique<Task>(func);
         }
-        return null;
+        return nullptr;
     }
 
     template<typename R, typename... Arg>
     std::unique_ptr<Task> generateTask(std::function<R(const Arg&...)> f, const Arg&... arg)
     {
         if (f) {
-            func = [f, arg...]() {
+            auto func = [f, arg...]() {
                 f(arg...);
             };
             return std::make_unique<Task>(func);
         }
-        return null;
+        return nullptr;
     }
 
     template<typename F, typename... Arg>
     std::unique_ptr<Task> generateTask(F f, const Arg&... arg)
     {
-        if (f) {
-            func = [f, arg...]() {
+        std::function<void(const Arg&...arg)> fun(f);
+        if (fun) {
+            auto func = [f, arg...]() {
                 f(arg...);
             };
             return std::make_unique<Task>(func);
         }
-        return null;
+        return nullptr;
     }
 
 }
