@@ -9,17 +9,27 @@ namespace task
    {
        std::lock_guard<std::mutex> guard(mutex_);
        tasks_.emplace_back(std::move(t));
+       cv_.notify_one();
    }
 
    void TaskListQueue::run()
    {
-       while (!stop_)
+       if (state_.load() != State::Initial)
+       {
+           abort();
+       }
+
+       state_.store(State::Running);
+       while (state_.load() != State::Stopped)
        {
            if (queueEmpty())
            {
                std::unique_lock<std::mutex> lk(mutex_);
-               using namespace std::chrono_literals;
-               cv_.wait_for(lk, 100ms, [this](){return tasks_.empty();});
+               cv_.wait(lk, [this](){return (!tasks_.empty() || state_.load() == State::Stopped);});
+               if (state_.load() == State::Stopped)
+               {
+                   break;
+               }
            }
 
            auto t = std::move(tasks_.front());
@@ -33,7 +43,8 @@ namespace task
 
    void TaskListQueue::stop()
    {
-       stop_ = true;
+       state_.store(State::Stopped);
+       cv_.notify_one();
    }
 
    bool TaskListQueue::queueEmpty() const

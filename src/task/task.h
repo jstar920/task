@@ -10,6 +10,7 @@ namespace task
         {
         }
 
+
         void operator()()
         {
             if (func)
@@ -17,42 +18,42 @@ namespace task
         }
         std::function<void()> func;
     };
-
-    template<typename R, typename... Arg>
-    std::unique_ptr<Task> generateTask(const std::function<R(const Arg&...)>& f, const Arg&... arg)
+#if __cplusplus >= 202002L
+    template<typename R, typename... Args>
+    std::unique_ptr<Task> generateTask(std::function<R(Args...)> f, Args... args)
     {
         if (f) {
-            auto func = [f, arg...]() {
-                f(arg...);
+            auto func = [f, ...args = std::forward(args)]() {
+                f(std::forward(args)...);
             };
             return std::make_unique<Task>(func);
         }
         return nullptr;
     }
-
-    template<typename R, typename... Arg>
-    std::unique_ptr<Task> generateTask(std::function<R(const Arg&...)> f, const Arg&... arg)
+#elif __cplusplus >= 201703L && __cplusplus < 202002L
+    template<typename R, typename... Args>
+    std::unique_ptr<Task> generateTask(std::function<R(Args...)> f, Args... args)
     {
         if (f) {
-            auto func = [f, arg...]() {
-                f(arg...);
+            auto func = [f, args = std::forward_as_tuple(args...)]() {
+                std::apply(f, std::forward(args));
             };
             return std::make_unique<Task>(func);
         }
         return nullptr;
     }
-
-    template<typename F, typename... Arg>
-    std::unique_ptr<Task> generateTask(F f, const Arg&... arg)
+#elif __cplusplus >= 201402L && __cplusplus < 201703L
+    template<typename R, typename... Args>
+    std::unique_ptr<Task> generateTask(std::function<R(Args...)> f, Args... args)
     {
-        std::function<void(const Arg&...arg)> fun(f);
-        if (fun) {
-            auto func = [f, arg...]() {
-                f(arg...);
+        if (f) {
+            auto func = [f, args = std::forward_as_tuple(args...)]() {
+                std::apply(f, std::forward(args));
             };
             return std::make_unique<Task>(func);
         }
         return nullptr;
     }
-
+#elif __cplusplus >= 201103L && __cplusplus < 201402L
+#endif
 }

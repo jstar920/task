@@ -18,7 +18,13 @@ namespace task
     private:
         std::list<TaskPtr> tasks_;
         mutable std::mutex mutex_;
-        std::atomic_bool stop_ {true};
+        enum class State
+        {
+            Initial,
+            Running,
+            Stopped
+        };
+        std::atomic<State> state_ {State::Initial};
         std::condition_variable cv_;
     };
 }
