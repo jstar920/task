@@ -1,3 +1,6 @@
 [submodule "src/submodules/assure"]
 	path = src/submodules/assure
 	url = https://github.com/jstar920/assure.git
+[submodule "src/submodules/cpputils"]
+	path = src/submodules/cpputils
+	url = https://github.com/jstar920/cpputils.git
