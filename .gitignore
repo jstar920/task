@@ -1,2 +1,4 @@
 windows_x64_output
 mac_x64_output
+src/submodules/assure
+src/submodules/cpputils
