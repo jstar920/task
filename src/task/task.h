@@ -1,3 +1,4 @@
+#include "apply.hpp"
 #include <functional>
 #include <memory>
 namespace task
@@ -10,6 +11,14 @@ namespace task
         {
         }
 
+        template<typename F, typename R, typename... Args>
+        Task(F f)
+        {
+            std::function<R(Args...args)> fun(f);
+            func = [fun, args = std::forward_as_tuple(args...)](){
+                cpputils::apply(fun, args); 
+            };
+        }
 
         void operator()()
         {
@@ -18,42 +27,13 @@ namespace task
         }
         std::function<void()> func;
     };
-#if __cplusplus >= 202002L
-    template<typename R, typename... Args>
-    std::unique_ptr<Task> generateTask(std::function<R(Args...)> f, Args... args)
+
+    template<typename F, typename... Args>
+    std::unique_ptr<Task> generateTask(F f, Args... args)
     {
-        if (f) {
-            auto func = [f, ...args = std::forward(args)]() {
-                f(std::forward(args)...);
-            };
-            return std::make_unique<Task>(func);
-        }
-        return nullptr;
+        auto func = [f, args = std::forward_as_tuple(args...)]() {
+            cpputils::apply(f, args);
+        };
+        return std::make_unique<Task>(func);
     }
-#elif __cplusplus >= 201703L && __cplusplus < 202002L
-    template<typename R, typename... Args>
-    std::unique_ptr<Task> generateTask(std::function<R(Args...)> f, Args... args)
-    {
-        if (f) {
-            auto func = [f, args = std::forward_as_tuple(args...)]() {
-                std::apply(f, std::forward(args));
-            };
-            return std::make_unique<Task>(func);
-        }
-        return nullptr;
-    }
-#elif __cplusplus >= 201402L && __cplusplus < 201703L
-    template<typename R, typename... Args>
-    std::unique_ptr<Task> generateTask(std::function<R(Args...)> f, Args... args)
-    {
-        if (f) {
-            auto func = [f, args = std::forward_as_tuple(args...)]() {
-                std::apply(f, std::forward(args));
-            };
-            return std::make_unique<Task>(func);
-        }
-        return nullptr;
-    }
-#elif __cplusplus >= 201103L && __cplusplus < 201402L
-#endif
 }

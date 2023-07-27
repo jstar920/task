@@ -15,6 +15,7 @@ add_library(task_static STATIC ${TASK_HEADERS} ${TASK_SOURCES})
 set_property(TARGET task PROPERTY FOLDER ${PRJECT_LIBRARIES_DIR})
 set_property(TARGET task_static PROPERTY FOLDER ${PRJECT_LIBRARIES_DIR})
 target_include_directories(task_static PUBLIC ".")
+target_link_libraries(task_static PUBLIC type_traits)
 
 install (TARGETS task
          RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/_install
