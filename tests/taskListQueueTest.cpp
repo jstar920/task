@@ -4,6 +4,29 @@
 #include <thread>
 
 using namespace task;
+
+class Operator
+{
+public:
+    int count1 {0};
+    void operator()() {
+        count1++;
+    };
+
+    int count2 {0};
+    void operator()(int a, const float& b)
+    {
+        count2++;
+    }
+
+    int count3 {0};
+    void operator()(int& a, const float& b)
+    {
+        count3++;
+        a = count3;
+    }
+};
+
 TEST_CASE("signgle_thread", "TaskListQueueTest")
 {
     TaskListQueue queue;
@@ -13,9 +36,12 @@ TEST_CASE("signgle_thread", "TaskListQueueTest")
         ++count;
     };
     queue.addTask(std::move(generateTask(TestFunc)));
-    queue.addTask(std::make_unique<Task>(TestFunc));
-    queue.addTask(std::make_unique<Task>(TestFunc));
-    queue.addTask(std::make_unique<Task>(TestFunc));
+    Operator op;
+    int a;
+    float b;
+    queue.addTask(std::make_unique<Task>(op));
+    queue.addTask(std::make_unique<Task>(op, 1, 1.0));
+    queue.addTask(std::make_unique<Task>(op, a, b));
     queue.addTask(std::make_unique<Task>(TestFunc));
 
     using namespace std::chrono_literals;
