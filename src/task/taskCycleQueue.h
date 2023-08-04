@@ -1,72 +1,94 @@
 #include <memory>
-#include <array>
-#include <mutex>
-#include <condition_variable>
 #include <atomic>
-
+#include <thread>
 
 namespace task
 {
     using TaskPtr = std::unique_ptr<struct Task>;
+
     template<size_t N>
     class TaskCycleQueue
     {
-        static_assert(N > 1);
+        static_assert(N > 1, "queue size should >= 2");
+        enum Type
+        {
+            Invalid,
+            Writing,
+            Valid
+        };
+        struct Element
+        {
+             std::atomic<Type> status { Type::Invalid };
+             TaskPtr task;
+        };
+        Element* elements_;
+        std::atomic<size_t> push_index_ {0};
+        std::atomic<size_t> size_ {0};
+
+        std::atomic<bool> stop_ {false};
+        
+        void init()
+        {
+            elements_ = new Element[N];
+        }
+
     public:
         TaskCycleQueue()
         {
-        }
-        
-        void addTask(TaskPtr t)
-        {
-            auto nextAvailable = nextAvailable();
-            tasks_[nextAvailable.load()] = std::move(t);
+            init();
         }
 
-        void run()
+        size_t size()
         {
-            while (!stop_) {
-                 auto next = nextExecute();
+            return size_.load();
+        }
+
+        void push(TaskPtr task)
+        {
+            Type expected {Type::Invalid};
+            while (!elements_[push_index_].status.compare_exchange_weak(expected, Type::Writing))
+            {
+                push_index_ = (push_index_ + 1) % N;
             }
+
+            elements_[push_index_].task = std::move(task);
+            elements_[push_index_].status = Type::Valid;
+            ++size_;
         }
 
         void stop()
         {
-            stop_ = true;
-        }
-    private:
-        bool queueEmpty() const;
-        size_t nextAvailable()
-        {
-            using namespace std::chrono_literals;
-            std::unique_lock<std::mutex> lk(mutex_);
-            cv_.wait_for(lk, 10ms, [this](){return !full_;});
-            auto nextAvailable = nextAvailable_;
-            nextAvailable_ = ++nextAvailable_ % N;
-            if (nextAvailable_ == end_)
-            {
-                full_ = true;
-            }
-            return nextAvailable;
+            stop_.store(true);
         }
 
-        size_t nextExecute()
+        void process()
         {
-            using namespace std::chrono_literals;
-            std::unique_lock<std::mutex> lk(mutex_);
-            cv_.wait_for(lk, 10ms, [this](){return (end_ != nextAvailable_ || full_);});
-            auto nextExe = end_;
-            end_ = ++end_ % N;
-            full_ = false;
-            return nextExe;
+            if (stop_ == false)
+            {
+                return;
+            }
+
+            size_t pop_index {0};
+            while (!stop_)
+            {
+                Type expected {Type::Valid};
+                
+                while (!(elements_[pop_index].status != Type::Valid))
+                {
+                    if (size == 0 && pop_index == push_index_)
+                    {
+                        using namespace std::chrono_literals;
+                        std::this_thread::sleep_for(50ms);
+                        continue;
+                    }
+                    pop_index = (pop_index + 1) % N;
+                }
+
+                auto task = std::move(elements_[pop_index].task);
+                elements_[pop_index].status = Type::Invalid;
+                --size;
+                task->execute();
+            }
         }
-    private:
-        std::atomic<TaskPtr, N>> tasks_;
-        size_t nextAvailable_{ 0 };
-        size_t end_{ 0 };
-        bool full_ { false };
-        mutable std::mutex mutex_;
-        std::atomic_bool stop_ {true};
-        std::condition_variable cv_;
     };
 }
